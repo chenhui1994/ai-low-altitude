@@ -42,9 +42,6 @@ L4_ROW_CHARS = list("0123456789")
 # Level 5 列/行字符集: 0-9, A-E (15个值)
 L5_CHARS = list("0123456789ABCDE")
 
-# Level 6 列/行字符集: 0-1 (2个值)
-L6_CHARS = list("01")
-
 # Level 7-10 列/行字符集: 0-7 (8个值)，延续 8×8 细分模式
 L7_CHARS = list("01234567")
 L8_CHARS = list("01234567")
@@ -94,8 +91,9 @@ def encode_level5(col, row):
 
 
 def encode_level6(col, row):
-    """Level 6 编码: 列(0-1) + 行(0-1) = 2字符"""
-    return f"{L6_CHARS[col]}{L6_CHARS[row]}"
+    """Level 6 编码: Z序编码 0-3, 在2列x2行网格中"""
+    code = row * 2 + col
+    return str(code)
 
 
 def encode_level7(col, row):
@@ -294,17 +292,24 @@ def compute_full_code(lon, lat, level):
 
 def _extract_col_row_from_code(code, level):
     """从编码中提取当前级别的col和row索引"""
+    # L6 使用1位Z序编码，特殊处理
+    if level == 6:
+        offset = 11
+        code_val = int(code[offset])
+        col_idx = code_val % 2
+        row_idx = code_val // 2
+        return col_idx, row_idx
+
     # 各级编码字符集的反向映射
     charsets = {
         5: (L5_CHARS, L5_CHARS),       # col: 0-9,A-E, row: 0-9,A-E
-        6: (L6_CHARS, L6_CHARS),       # col: 0-1, row: 0-1
         7: (L7_CHARS, L7_CHARS),       # col: 0-7, row: 0-7
         8: (L8_CHARS, L8_CHARS),       # col: 0-7, row: 0-7
         9: (L9_CHARS, L9_CHARS),       # col: 0-7, row: 0-7
         10: (L10_CHARS, L10_CHARS),    # col: 0-7, row: 0-7
     }
-    # 各级编码在完整code中的起始位置
-    level_offsets = {5: 9, 6: 11, 7: 13, 8: 15, 9: 17, 10: 19}
+    # 各级编码在完整code中的起始位置（L6为1位Z序，影响后续偏移）
+    level_offsets = {5: 9, 7: 12, 8: 14, 9: 16, 10: 18}
 
     offset = level_offsets[level]
     col_char = code[offset]
@@ -460,8 +465,8 @@ def generate_high_level(level, config, bounds):
 
             geom = box(g_w, g_s, g_e, g_n)
 
-            # 确定父编码
-            parent_code = code[:-2] if level > 3 else code[:-1]
+            # 确定父编码（使用编码长度表）
+            parent_code = code[:LEVEL_CODE_LENGTHS[level - 1]] if level > 1 else None
 
             # 从编码提取当前级别的col和row
             col_idx, row_idx = _extract_col_row_from_code(code, level)

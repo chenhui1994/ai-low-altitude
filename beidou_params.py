@@ -41,7 +41,7 @@ LEVEL_SUBDIVISIONS = {
 }
 
 # 各级代码长度
-LEVEL_CODE_LENGTHS = {1: 4, 2: 6, 3: 7, 4: 9, 5: 11, 6: 13, 7: 15, 8: 17, 9: 19, 10: 21}
+LEVEL_CODE_LENGTHS = {1: 4, 2: 6, 3: 7, 4: 9, 5: 11, 6: 12, 7: 14, 8: 16, 9: 18, 10: 20}
 
 # 各级高度分辨率 (米) — 与纬度分辨率对应
 HEIGHT_RESOLUTIONS = {

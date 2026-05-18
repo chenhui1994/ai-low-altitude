@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 *)",
+      "Bash(python \"E:/Code/ai-specify/ai-low-altitude/doc/extract_pdf.py\")"
+    ]
+  }
+}
