@@ -69,19 +69,29 @@ class OutputPanel(QWidget):
         """显示生成结果"""
         gen_type = results.get("_type", "2d")
         files = results.get("_files", [])
+        output_type = results.get("_output_type", "spatialite")
 
         # 更新文件列表
         self._file_list.clear()
-        for fpath in files:
-            if os.path.exists(fpath):
-                size_kb = os.path.getsize(fpath) / 1024
-                if size_kb > 1024:
-                    size_str = f"{size_kb / 1024:.1f} MB"
+        if output_type == "postgis":
+            pg_info = results.get("_pg_info", "PostGIS")
+            self._file_list.addItem(f"PostGIS: {pg_info}")
+            # 列出各级别表名
+            levels = sorted([k for k in results.keys() if isinstance(k, int)])
+            for lvl in levels:
+                self._file_list.addItem(f"  → grid_level_{lvl}")
+        else:
+            for fpath in files:
+                if os.path.exists(fpath):
+                    size_kb = os.path.getsize(fpath) / 1024
+                    if size_kb > 1024:
+                        size_str = f"{size_kb / 1024:.1f} MB"
+                    else:
+                        size_str = f"{size_kb:.1f} KB"
+                    self._file_list.addItem(f"{os.path.basename(fpath)}  ({size_str})")
+                    self._file_list.item(self._file_list.count() - 1).setData(Qt.UserRole, fpath)
                 else:
-                    size_str = f"{size_kb:.1f} KB"
-                self._file_list.addItem(f"{os.path.basename(fpath)}  ({size_str})")
-                # 存储完整路径
-                self._file_list.item(self._file_list.count() - 1).setData(Qt.UserRole, fpath)
+                    self._file_list.addItem(fpath)
 
         # 更新汇总表
         levels = sorted([k for k in results.keys() if isinstance(k, int)])

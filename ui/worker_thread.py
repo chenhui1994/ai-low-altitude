@@ -50,15 +50,27 @@ class GenerationWorker(QObject):
 
                 # 转换为可序列化的结果
                 for level, gdf in gdfs.items():
+                    cell_count = gdf.attrs.get("cell_count", len(gdf))
                     results_by_level[level] = {
-                        "cells": len(gdf),
+                        "cells": int(cell_count),
                         "type": "2d",
                     }
 
                 import os
-                output_path = os.path.join(self._config.output_dir, self._config.output_db_name)
-                results_by_level["_files"] = [output_path]
-                results_by_level["_type"] = "2d"
+
+                if self._config.output_type == "postgis":
+                    # PostGIS 输出：记录连接和表信息
+                    results_by_level["_files"] = []
+                    results_by_level["_type"] = "2d"
+                    results_by_level["_output_type"] = "postgis"
+                    results_by_level["_pg_info"] = (
+                        f"{self._config.pg_host}:{self._config.pg_port}/"
+                        f"{self._config.pg_database} [{self._config.pg_schema}]"
+                    )
+                else:
+                    output_path = os.path.join(self._config.output_dir, self._config.output_db_name)
+                    results_by_level["_files"] = [output_path]
+                    results_by_level["_type"] = "2d"
 
                 self.finished.emit(results_by_level)
 

@@ -101,6 +101,18 @@ class BeiDou2DConfig:
     output_db_name: str = "beidou_grid.sqlite"
     crs: str = "EPSG:4326"
 
+    # 输出类型: "spatialite" 或 "postgis"
+    output_type: str = "spatialite"
+
+    # PostGIS 连接参数
+    pg_host: str = "localhost"
+    pg_port: int = 5432
+    pg_database: str = "gx_low_altitude"
+    pg_schema: str = "public"
+    pg_user: str = "postgres"
+    pg_password: str = "123456"
+    pg_table_prefix: str = "grid_level_"
+
     def validate(self) -> list[str]:
         """验证配置，返回错误信息列表（空=合法）"""
         errors = []
@@ -125,8 +137,29 @@ class BeiDou2DConfig:
         # 输出
         if not self.output_dir:
             errors.append("输出目录不能为空")
-        if not self.output_db_name or not self.output_db_name.strip():
-            errors.append("数据库文件名不能为空")
+        if self.output_type == "spatialite":
+            if not self.output_db_name or not self.output_db_name.strip():
+                errors.append("数据库文件名不能为空")
+        elif self.output_type == "postgis":
+            if not self.pg_host or not self.pg_host.strip():
+                errors.append("PostGIS 主机地址不能为空")
+            if not self.pg_database or not self.pg_database.strip():
+                errors.append("PostGIS 数据库名不能为空")
+            if not self.pg_user or not self.pg_user.strip():
+                errors.append("PostGIS 用户名不能为空")
+            if not self.pg_schema or not self.pg_schema.strip():
+                errors.append("PostGIS Schema 不能为空")
+            if self.pg_port < 1 or self.pg_port > 65535:
+                errors.append(f"PostGIS 端口号无效: {self.pg_port}")
+            # 检查依赖
+            try:
+                import sqlalchemy
+                import psycopg2
+                import geoalchemy2
+            except ImportError as e:
+                errors.append(f"缺少 PostGIS 依赖: {e}. 请安装: pip install sqlalchemy psycopg2-binary geoalchemy2")
+        else:
+            errors.append(f"无效的输出类型: {self.output_type}（仅支持 spatialite 或 postgis）")
         if not self.crs or not self.crs.strip():
             errors.append("CRS 不能为空")
 
