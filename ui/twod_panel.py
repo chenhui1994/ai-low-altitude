@@ -23,6 +23,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from beidou_grid_engine import test_postgis_connection
 from beidou_params import BeiDou2DConfig
 from ui.common_panel import CommonPanel
 
@@ -293,7 +294,6 @@ class TwoDPanel(QWidget):
         self._test_conn_btn.setText("连接中...")
 
         try:
-            from beidou_grid_engine import test_postgis_connection
             ok, msg = test_postgis_connection(config)
             if ok:
                 QMessageBox.information(self, "连接成功", msg)

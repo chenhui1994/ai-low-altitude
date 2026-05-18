@@ -3,10 +3,14 @@
 将耗时的网格生成操作移到 QThread 中执行，避免阻塞 UI。
 """
 
+import os
 import threading
 import traceback
 
 from PySide6.QtCore import QObject, QThread, Signal, Slot
+
+from beidou_3d_engine import generate_3d_grid
+from beidou_grid_engine import generate_2d_grid
 
 
 class GenerationWorker(QObject):
@@ -36,8 +40,6 @@ class GenerationWorker(QObject):
         """在主线程中通过信号触发，在 QThread 中执行"""
         try:
             if self._type == "2d":
-                from beidou_grid_engine import generate_2d_grid
-
                 results_by_level = {}
                 def on_progress(pct, msg):
                     self.progress.emit(pct, msg)
@@ -56,8 +58,6 @@ class GenerationWorker(QObject):
                         "type": "2d",
                     }
 
-                import os
-
                 if self._config.output_type == "postgis":
                     # PostGIS 输出：记录连接和表信息
                     results_by_level["_files"] = []
@@ -75,8 +75,6 @@ class GenerationWorker(QObject):
                 self.finished.emit(results_by_level)
 
             elif self._type == "3d":
-                from beidou_3d_engine import generate_3d_grid
-
                 def on_progress(pct, msg):
                     self.progress.emit(pct, msg)
 

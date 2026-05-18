@@ -11,11 +11,13 @@
 import math
 import os
 import threading
+from urllib.parse import quote_plus
 
 import geopandas as gpd
 import numpy as np
 import pandas as pd
 from shapely.geometry import box
+from sqlalchemy import create_engine, text
 
 from beidou_params import (
     BeiDou2DConfig,
@@ -540,8 +542,6 @@ def generate_high_level(level, config, bounds):
 
 def _get_pg_engine(config):
     """创建 SQLAlchemy PostGIS 引擎（调用方负责 dispose）"""
-    from sqlalchemy import create_engine
-    from urllib.parse import quote_plus
     encoded_user = quote_plus(config.pg_user)
     encoded_pwd = quote_plus(config.pg_password)
     conn_str = (
@@ -827,11 +827,6 @@ def test_postgis_connection(config) -> tuple[bool, str]:
     先验证 PostgreSQL 连通性，再检测 PostGIS 扩展是否安装。
     返回 (ok: bool, message: str)
     """
-    try:
-        from sqlalchemy import create_engine, text
-    except ImportError:
-        return False, "缺少 SQLAlchemy 依赖，请安装: pip install sqlalchemy psycopg2-binary"
-
     engine = None
     try:
         engine = _get_pg_engine(config)

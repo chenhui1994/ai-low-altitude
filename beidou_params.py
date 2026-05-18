@@ -5,6 +5,11 @@
 无最大网格数限制 — 全地理范围按自然分辨率生成。
 """
 
+import math
+
+import geoalchemy2
+import psycopg2
+import sqlalchemy
 from dataclasses import dataclass, field, asdict
 from pathlib import Path
 
@@ -151,13 +156,6 @@ class BeiDou2DConfig:
                 errors.append("PostGIS Schema 不能为空")
             if self.pg_port < 1 or self.pg_port > 65535:
                 errors.append(f"PostGIS 端口号无效: {self.pg_port}")
-            # 检查依赖
-            try:
-                import sqlalchemy
-                import psycopg2
-                import geoalchemy2
-            except ImportError as e:
-                errors.append(f"缺少 PostGIS 依赖: {e}. 请安装: pip install sqlalchemy psycopg2-binary geoalchemy2")
         else:
             errors.append(f"无效的输出类型: {self.output_type}（仅支持 spatialite 或 postgis）")
         if not self.crs or not self.crs.strip():
@@ -259,8 +257,6 @@ class BeiDou3DConfig:
 
     def get_height_layers(self, level: int) -> list:
         """计算指定层级的高度层列表 [(h_bottom, h_top), ...]，无上限限制"""
-        import math
-
         h_res = self.get_height_resolution(level)
         if h_res >= self.h_max:
             return [(self.h_min, self.h_max)]
